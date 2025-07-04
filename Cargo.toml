@@ -1,0 +1,26 @@
+[package]
+name = "hypatia-ca"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.40", features = ["derive"] }
+rcgen = { version = "0.14.1", features = ["x509-parser"] }
+chrono = { version = "0.4.41", features = ["serde"] }
+serde_json = "1.0.140"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["fmt", "env-filter", "ansi"] }
+zeroize = "1.8.1"
+crypt_guard = "1.3.10"
+owo-colors = "4"
+time = "0.3.41"
+serde = { version = "1.0.219", features = ["derive"] }
+hyper = { version = "1.6.0", features = ["full"] }
+tokio = { version = "1.46.0", features = ["rt-multi-thread", "macros"] }
+hyper-rustls = "0.27.7"
+rustls-pemfile = "2.2.0"
+rustls = "0.23.28"
+tokio-rustls = "0.26.2"
+bytes = "1.10.1"
+hyper-util = { version = "0.1.14", features = ["tokio"] }
+http-body-util = "0.1.3"

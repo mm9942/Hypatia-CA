@@ -52,7 +52,7 @@ impl Runnable for ServeArgs {
             .parse::<SocketAddr>()
             .map_err(|e| Error::Other(e.to_string()))?;
         info!("starting API on {}", addr);
-
+      
         let certs = load_certs(&self.tls_cert)?;
         let key = load_private_key(&self.tls_key)?;
         let tls_cfg = ServerConfig::builder()

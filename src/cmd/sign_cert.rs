@@ -28,7 +28,7 @@ impl crate::cmd::Runnable for SignCertArgs {
         let ca = Issuer::from_ca_cert_pem(&ca_cert, ca_key).map_err(Error::from)?;
 
         let mut params = CertificateParams::new(self.san).map_err(Error::from)?;
-
+      
         params.is_ca = IsCa::ExplicitNoCa;
         params
             .distinguished_name
@@ -44,7 +44,7 @@ impl crate::cmd::Runnable for SignCertArgs {
 
         fs::write_cert(&self.cn, &cert_pem, &key_pem)?;
         audit::emit("sign-cert", &self.cn, json)?;
-      
+
         event!(Level::INFO, cn = %self.cn, "certificate signed");
         info!("certificate created for {}", self.cn);
         Ok(())

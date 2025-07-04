@@ -78,5 +78,30 @@ Run a local API:
 ```bash
 $ sudo ./target/release/hypatia-ca serve --addr 127.0.0.1:8080
 ```
+Use `RUST_LOG=info` or a custom filter to control log output. Passing `--json`
+outputs audit events in JSONL format.
 
-Development uses `cargo fmt --all`, `cargo clippy`, and `cargo test`.
+## Design Notes
+
+The command parser lives in `src/main.rs` and delegates to modules in
+`src/cmd`. Each command implements the `Runnable` trait:
+
+```rust
+pub trait Runnable {
+    fn run(&self, cli: &crate::Cli) -> Result<()>;
+}
+```
+
+Errors bubble up as `Result<()>` and are mapped using `map_err`. No calls to
+`unwrap()` or `clone()` are used; values are moved or borrowed as needed. Secret
+material implements `Zeroize` and is cleared from memory when dropped.
+
+## Security Considerations
+
+- Generated private keys are zeroized after being written to disk.
+- Logging includes `debug`, `info`, `error`, and `trace` levels. Events are
+  emitted with `event!` macros.
+- The audit log is append‑only. Each entry records the timestamp, action and
+  details.
+- Post‑quantum key generation uses Kyber via `crypt_guard 1.3.10` and supports
+  Falcon and Dilithium signatures.

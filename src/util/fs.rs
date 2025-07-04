@@ -5,6 +5,7 @@ use tracing::{debug, error};
 use zeroize::Zeroizing;
 
 const ROOT_DIR: &str = "/opt/hypatia-ca/data/root";
+
 const CRL_FILE: &str = "/opt/hypatia-ca/data/revoked.txt";
 const CERT_DIR: &str = "/opt/hypatia-ca/data/certs";
 

@@ -1,6 +1,6 @@
 # Hypatia-CA
 
-Hypatia-CA is a small certificate authority written entirely in Rust. It is designed around an **offline root** model and an auditable workflow.
+Hypatia-CA is a small certificate authority written entirely in Rust.  It aims to be easy to audit and operate while offering modern security primitives.  The project follows an **offline root** model in which the most sensitive keys remain air‑gapped.  Day‑to‑day certificate issuance is handled by an intermediate CA or through the built‑in API service.
 
 ## Subcommands
 
@@ -8,7 +8,7 @@ Hypatia-CA is a small certificate authority written entirely in Rust. It is desi
 - `sign-cert` – sign a certificate with the root CA
 - `signature` – sign or verify files using Falcon or Dilithium
 - `revoke` – add a certificate serial to the revocation list
-- `serve` – run a local HTTP API for certificate requests
+- `serve` – run a local HTTPS API for certificate requests
 
 ## Features
 
@@ -24,6 +24,8 @@ Hypatia-CA is a small certificate authority written entirely in Rust. It is desi
 1. **Sovereignty of Root Trust** – the root CA is generated offline and never used for automatic issuance. Certificates are normally signed by an intermediate CA.
 2. **Key Custody & Hardware Backing** – keys should be stored in hardware (HSM or secure enclave). Root keys are ideally cold stored.
 3. **Certificate Profiles** – SANs are restricted and lifetimes kept short. Extensions set basic constraints and EKUs.
+4. **Authenticated API** – the optional `serve` command runs over TLS and requires a bearer token for issuing certificates.
+5. **Zeroization** – all loaded secret keys are wiped from memory after use via the `zeroize` crate.
 
 ## Directory Layout
 
@@ -58,7 +60,7 @@ $ cargo build --release
 Create the root certificate:
 
 ```bash
-$ sudo ./target/release/hypatia-ca init-root --cn "Hypatia Root"
+$ sudo ./target/release/hypatia-ca init-root --cn "Hypatia Root" --days 730
 ```
 
 Sign a certificate:
@@ -73,41 +75,11 @@ Sign a file:
 $ sudo ./target/release/hypatia-ca signature --file example.txt --sign
 ```
 
-Run a local API:
+Run a local HTTPS API:
 
 ```bash
-$ sudo ./target/release/hypatia-ca serve --addr 127.0.0.1:8080
+$ sudo ./target/release/hypatia-ca serve --addr 127.0.0.1:8443 \
+    --tls-cert server.pem --tls-key server.key --token secret
 ```
 
 Development uses `cargo fmt --all`, `cargo clippy`, and `cargo test`.
-
-```bash
-$ sudo ./target/release/hypatia-ca serve --addr 127.0.0.1:8080
-```
-Use `RUST_LOG=info` or a custom filter to control log output. Passing `--json`
-outputs audit events in JSONL format.
-
-## Design Notes
-
-The command parser lives in `src/main.rs` and delegates to modules in
-`src/cmd`. Each command implements the `Runnable` trait:
-
-```rust
-pub trait Runnable {
-    fn run(&self, cli: &crate::Cli) -> Result<()>;
-}
-```
-
-Errors bubble up as `Result<()>` and are mapped using `map_err`. No calls to
-`unwrap()` or `clone()` are used; values are moved or borrowed as needed. Secret
-material implements `Zeroize` and is cleared from memory when dropped.
-
-## Security Considerations
-
-- Generated private keys are zeroized after being written to disk.
-- Logging includes `debug`, `info`, `error`, and `trace` levels. Events are
-  emitted with `event!` macros.
-- The audit log is append‑only. Each entry records the timestamp, action and
-  details.
-- Post‑quantum key generation uses Kyber via `crypt_guard 1.3.10` and supports
-  Falcon and Dilithium signatures.

@@ -39,3 +39,23 @@ impl From<serde_json::Error> for Error {
         Error::Serde(e)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display_io() {
+        let err = Error::Io(io::Error::new(io::ErrorKind::Other, "oh"));
+        let msg = format!("{err}");
+        assert!(msg.contains("IO error"));
+    }
+
+    #[test]
+    fn result_alias() {
+        fn returns_ok() -> Result<()> {
+            Ok(())
+        }
+        assert!(returns_ok().is_ok());
+    }
+}

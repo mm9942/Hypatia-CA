@@ -32,7 +32,7 @@ pub struct SignatureArgs {
 }
 
 impl Runnable for SignatureArgs {
-    fn run(&self, cli: &crate::Cli) -> Result<()> {
+    fn run(self, json: bool) -> Result<()> {
         let data = fs::read(&self.file).map_err(Error::from)?;
         if self.sign {
             match self.algorithm.as_str() {
@@ -74,7 +74,7 @@ impl Runnable for SignatureArgs {
                 _ => return Err(Error::Other("unknown algorithm".into())),
             }
             info!("signature stored");
-            audit::emit("signature-sign", &self.algorithm, cli.json)?;
+            audit::emit("signature-sign", &self.algorithm, json)?;
             event!(tracing::Level::INFO, "file signed");
         } else if self.verify {
             let sig = fs::read(format!("{}.sig", self.file)).map_err(Error::from)?;
@@ -128,7 +128,7 @@ impl Runnable for SignatureArgs {
                 error!("signature verification failed");
                 return Err(Error::Other("verification failed".into()));
             }
-            audit::emit("signature-verify", &self.algorithm, cli.json)?;
+            audit::emit("signature-verify", &self.algorithm, json)?;
             event!(tracing::Level::INFO, "verification complete");
         }
         Ok(())

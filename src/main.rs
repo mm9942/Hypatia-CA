@@ -42,13 +42,14 @@ fn main() -> Result<()> {
         .init();
     info!("hypatia-ca started");
     let cli = Cli::parse();
+    let json = cli.json;
     event!(Level::DEBUG, command = ?cli.command, "dispatching command");
-    match &cli.command {
-        Commands::InitRoot(args) => args.run(&cli)?,
-        Commands::Signature(args) => args.run(&cli)?,
-        Commands::SignCert(args) => args.run(&cli)?,
-        Commands::Serve(args) => args.run(&cli)?,
-        Commands::Revoke(args) => args.run(&cli)?,
+    match cli.command {
+        Commands::InitRoot(args) => args.run(json)?,
+        Commands::Signature(args) => args.run(json)?,
+        Commands::SignCert(args) => args.run(json)?,
+        Commands::Serve(args) => args.run(json)?,
+        Commands::Revoke(args) => args.run(json)?,
     }
     Ok(())
 }

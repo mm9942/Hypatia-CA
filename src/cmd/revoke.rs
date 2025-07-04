@@ -11,10 +11,10 @@ pub struct RevokeArgs {
 }
 
 impl crate::cmd::Runnable for RevokeArgs {
-    fn run(&self, cli: &crate::Cli) -> Result<()> {
+    fn run(self, json: bool) -> Result<()> {
         fs::append_revocation(&self.serial)?;
         info!(serial = %self.serial, "certificate revoked");
-        audit::emit("revoke", &self.serial, cli.json)?;
+        audit::emit("revoke", &self.serial, json)?;
         event!(Level::INFO, "revocation written");
         Ok(())
     }

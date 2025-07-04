@@ -6,6 +6,7 @@ use crypt_guard::{
     error::CryptError,
 };
 use rcgen::{BasicConstraints, CertificateParams, DnType, IsCa, KeyPair};
+use time::{Duration, OffsetDateTime};
 use tracing::{Level, debug, event, info, trace};
 use zeroize::{Zeroize, Zeroizing};
 
@@ -29,13 +30,14 @@ pub struct InitRootArgs {
 }
 
 impl crate::cmd::Runnable for InitRootArgs {
-    fn run(&self, cli: &crate::Cli) -> Result<()> {
+    fn run(self, json: bool) -> Result<()> {
         let mut params = CertificateParams::new(vec![]).map_err(Error::from)?;
         params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
         params
             .distinguished_name
             .push(DnType::CommonName, self.cn.to_owned());
-        params.not_after = rcgen::date_time_ymd(2035, 1, 1);
+        let now = OffsetDateTime::now_utc();
+        params.not_after = now + Duration::days(self.days.into());
 
         debug!("certificate params ready");
 
@@ -50,7 +52,7 @@ impl crate::cmd::Runnable for InitRootArgs {
         info!("storing root certificate");
         fs::write_root_ca(&cert_pem, &key_pem, self.force)?;
         pq_sec.zeroize();
-        audit::emit("init-root", &cert_pem, cli.json)?;
+        audit::emit("init-root", &cert_pem, json)?;
         event!(Level::INFO, "Root CA created");
         Ok(())
     }

@@ -7,5 +7,5 @@ pub mod signature;
 use crate::error::Result;
 
 pub trait Runnable {
-    fn run(&self, cli: &crate::Cli) -> Result<()>;
+    fn run(self, json: bool) -> Result<()>;
 }

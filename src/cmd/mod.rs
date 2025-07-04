@@ -1,6 +1,8 @@
 pub mod init_root;
 pub mod revoke;
-pub mod sign;
+pub mod serve;
+pub mod sign_cert;
+pub mod signature;
 
 use crate::error::Result;
 

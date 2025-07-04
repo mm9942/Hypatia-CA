@@ -25,8 +25,12 @@ pub struct Cli {
 pub enum Commands {
     /// Generate offline root CA
     InitRoot(cmd::init_root::InitRootArgs),
-    /// Sign data using post-quantum algorithms
-    Sign(cmd::sign::SignArgs),
+    /// Sign or verify messages
+    Signature(cmd::signature::SignatureArgs),
+    /// Sign a certificate with the root CA
+    SignCert(cmd::sign_cert::SignCertArgs),
+    /// Serve an HTTP API for certificate requests
+    Serve(cmd::serve::ServeArgs),
     /// Revoke a certificate
     Revoke(cmd::revoke::RevokeArgs),
 }
@@ -41,7 +45,9 @@ fn main() -> Result<()> {
     event!(Level::DEBUG, command = ?cli.command, "dispatching command");
     match &cli.command {
         Commands::InitRoot(args) => args.run(&cli)?,
-        Commands::Sign(args) => args.run(&cli)?,
+        Commands::Signature(args) => args.run(&cli)?,
+        Commands::SignCert(args) => args.run(&cli)?,
+        Commands::Serve(args) => args.run(&cli)?,
         Commands::Revoke(args) => args.run(&cli)?,
     }
     Ok(())

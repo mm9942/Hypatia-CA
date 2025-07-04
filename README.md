@@ -1,63 +1,83 @@
 # Hypatia-CA
 
-Hypatia-CA is a minimal certificate authority tool written in Rust. It targets
-an "offline first" workflow—keys and certificates are generated on an
-air‑gapped machine and transferred via removable media. Structured `tracing`
-logs and an append-only audit log help track all operations.
+Hypatia-CA is a small certificate authority written entirely in Rust. It is designed around an **offline root** model and an auditable workflow.
 
-The tool currently supports three subcommands:
+## Subcommands
 
-- `init-root` – generate a self‑signed root certificate
-- `sign` – create a detached signature using Falcon or Dilithium
-- `revoke` – append a certificate serial number to the revocation list
+- `init-root` – create a self‑signed root certificate
+- `sign-cert` – sign a certificate with the root CA
+- `signature` – sign or verify files using Falcon or Dilithium
+- `revoke` – add a certificate serial to the revocation list
+- `serve` – run a local HTTP API for certificate requests
 
 ## Features
 
-- **Pure Rust implementation** using recent crates and no external C
-  dependencies.
-- **Custom error handling** via an `Error` enum (`src/error.rs`) and a `Result`
-  alias. Errors are colored for readability.
-- **Tracing based logging** with `tracing-subscriber` (features: `fmt`,
-  `env-filter`, `ansi`). Log output can be plain text or JSON.
-- **Zeroization of secrets** with the `zeroize` crate.
-- **Optional post‑quantum key generation** via `crypt_guard` (Kyber).
-- **Digital signatures** via `crypt_guard` (Falcon and Dilithium).
-- **Object oriented design** using the `Runnable` trait to execute subcommands.
-- **Append-only audit log** written to `/opt/hypatia-ca/audit.log`.
+- Pure Rust with a custom `Error` type and colored formatting
+- Logging via `tracing` with `fmt`, `env-filter` and colored output
+- Zeroization of private key material
+- Falcon and Dilithium signatures via `crypt_guard` 1.3.10
+- X.509 certificate creation using `rcgen`
+- Append‑only audit log at `/opt/hypatia-ca/audit.log`
+
+## Security Plan
+
+1. **Sovereignty of Root Trust** – the root CA is generated offline and never used for automatic issuance. Certificates are normally signed by an intermediate CA.
+2. **Key Custody & Hardware Backing** – keys should be stored in hardware (HSM or secure enclave). Root keys are ideally cold stored.
+3. **Certificate Profiles** – SANs are restricted and lifetimes kept short. Extensions set basic constraints and EKUs.
 
 ## Directory Layout
 
 ```
 hypatia-ca/
-├── Cargo.toml            # crate manifest
+├── Cargo.toml
 ├── src/
-│   ├── main.rs           # CLI entry point
-│   ├── cmd/              # subcommand modules
+│   ├── main.rs
+│   ├── cmd/
 │   │   ├── init_root.rs
-│   │   ├── sign.rs
-│   │   └── revoke.rs
-│   ├── util/             # helpers (fs, audit)
-│   └── error.rs          # custom error type
+│   │   ├── sign_cert.rs
+│   │   ├── signature.rs
+│   │   ├── revoke.rs
+│   │   └── serve.rs
+│   ├── util/
+│   │   ├── fs.rs
+│   │   └── audit.rs
+│   └── error.rs
 └── README.md
 ```
 
-Certificates are stored under `/opt/hypatia-ca/data/root`. The audit log lives
-at `/opt/hypatia-ca/audit.log`.
+Generated material is written below `/opt/hypatia-ca/data`. Run all commands with `sudo` so the tool can write there.
 
 ## Usage
 
-Build the project with a recent Rust toolchain (edition 2024):
+Build with a recent toolchain:
 
 ```bash
 $ cargo build --release
 ```
 
-Generate a root certificate:
+Create the root certificate:
 
 ```bash
 $ sudo ./target/release/hypatia-ca init-root --cn "Hypatia Root"
 ```
 
+Sign a certificate:
+
+```bash
+$ sudo ./target/release/hypatia-ca sign-cert --cn "example.com"
+```
+
+Sign a file:
+
+```bash
+$ sudo ./target/release/hypatia-ca signature --file example.txt --sign
+```
+
+Run a local API:
+
+```bash
+$ sudo ./target/release/hypatia-ca serve --addr 127.0.0.1:8080
+```
 Use `RUST_LOG=info` or a custom filter to control log output. Passing `--json`
 outputs audit events in JSONL format.
 
@@ -85,9 +105,3 @@ material implements `Zeroize` and is cleared from memory when dropped.
   details.
 - Post‑quantum key generation uses Kyber via `crypt_guard 1.3.10` and supports
   Falcon and Dilithium signatures.
-
-## Contributing
-
-Future work includes adding intermediate CA support and extending the audit log
-with integrity checks. Patches and issue reports are welcome.
-

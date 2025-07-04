@@ -70,7 +70,9 @@ pub fn read_signature() -> Result<(Vec<u8>, Vec<u8>)> {
 }
 
 pub fn append_revocation(serial: &str) -> Result<()> {
-    fs::create_dir_all(Path::new(CRL_FILE).parent().unwrap()).map_err(Error::from)?;
+    if let Some(parent) = Path::new(CRL_FILE).parent() {
+        fs::create_dir_all(parent).map_err(Error::from)?;
+    }
     use std::fs::OpenOptions;
     use std::io::Write;
     let mut file = OpenOptions::new()

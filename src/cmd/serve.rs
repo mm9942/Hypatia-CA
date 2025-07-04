@@ -2,6 +2,7 @@ use crate::cmd::Runnable;
 use crate::error::{Error, Result};
 use crate::util::{audit, fs};
 use clap::Args;
+use hyper::http::StatusCode;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, body::to_bytes};
 use serde::Deserialize;
@@ -48,31 +49,34 @@ async fn handle(req: Request<Body>) -> std::result::Result<Response<Body>, hyper
         let data: CertRequest = match serde_json::from_slice(&body) {
             Ok(d) => d,
             Err(_) => {
-                return Ok(Response::builder()
-                    .status(400)
-                    .body(Body::from("bad request"))
-                    .unwrap());
+                let mut resp = Response::new(Body::from("bad request"));
+                *resp.status_mut() = StatusCode::BAD_REQUEST;
+                return Ok(resp);
             }
         };
         let args = crate::cmd::sign_cert::SignCertArgs {
             cn: data.cn,
             days: data.days.unwrap_or(365),
+            san: vec![],
         };
-        if let Err(e) = args.run(&crate::Cli {
+        let cli = crate::Cli {
             json: false,
-            command: crate::Commands::SignCert(args.clone()),
-        }) {
+            command: crate::Commands::SignCert(crate::cmd::sign_cert::SignCertArgs {
+                cn: args.cn.to_owned(),
+                days: args.days,
+                san: args.san.clone(),
+            }),
+        };
+        if let Err(e) = args.run(&cli) {
             error!("cert signing failed: {}", e);
-            return Ok(Response::builder()
-                .status(500)
-                .body(Body::from("error"))
-                .unwrap());
+            let mut resp = Response::new(Body::from("error"));
+            *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+            return Ok(resp);
         }
         Ok(Response::new(Body::from("ok")))
     } else {
-        Ok(Response::builder()
-            .status(404)
-            .body(Body::from("not found"))
-            .unwrap())
+        let mut resp = Response::new(Body::from("not found"));
+        *resp.status_mut() = StatusCode::NOT_FOUND;
+        Ok(resp)
     }
 }

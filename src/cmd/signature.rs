@@ -80,11 +80,46 @@ impl Runnable for SignatureArgs {
             let sig = fs::read(format!("{}.sig", self.file)).map_err(Error::from)?;
             let pk = fs::read(format!("{}.pk", self.file)).map_err(Error::from)?;
             let res = match self.algorithm.as_str() {
-                "falcon512" => Verify!(Falcon, pk.to_owned(), 512, sig.to_owned(), data.to_owned(), Detached),
-                "falcon1024" => Verify!(Falcon, pk.to_owned(), 1024, sig.to_owned(), data.to_owned(), Detached),
-                "dilithium2" => Verify!(Dilithium, pk.to_owned(), 2, sig.to_owned(), data.to_owned(), Detached),
-                "dilithium3" => Verify!(Dilithium, pk.to_owned(), 3, sig.to_owned(), data.to_owned(), Detached),
-                "dilithium5" => Verify!(Dilithium, pk.to_owned(), 5, sig.to_owned(), data.to_owned(), Detached),
+                "falcon512" => Verify!(
+                    Falcon,
+                    pk.to_owned(),
+                    512,
+                    sig.to_owned(),
+                    data.to_owned(),
+                    Detached
+                ),
+                "falcon1024" => Verify!(
+                    Falcon,
+                    pk.to_owned(),
+                    1024,
+                    sig.to_owned(),
+                    data.to_owned(),
+                    Detached
+                ),
+                "dilithium2" => Verify!(
+                    Dilithium,
+                    pk.to_owned(),
+                    2,
+                    sig.to_owned(),
+                    data.to_owned(),
+                    Detached
+                ),
+                "dilithium3" => Verify!(
+                    Dilithium,
+                    pk.to_owned(),
+                    3,
+                    sig.to_owned(),
+                    data.to_owned(),
+                    Detached
+                ),
+                "dilithium5" => Verify!(
+                    Dilithium,
+                    pk.to_owned(),
+                    5,
+                    sig.to_owned(),
+                    data.to_owned(),
+                    Detached
+                ),
                 _ => return Err(Error::Other("unknown algorithm".into())),
             };
             if res {

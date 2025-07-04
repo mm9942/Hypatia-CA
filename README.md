@@ -64,7 +64,7 @@ $ sudo ./target/release/hypatia-ca init-root --cn "Hypatia Root"
 Sign a certificate:
 
 ```bash
-$ sudo ./target/release/hypatia-ca sign-cert --cn "example.com"
+$ sudo ./target/release/hypatia-ca sign-cert --cn "example.com" --san "example.com" --san "www.example.com"
 ```
 
 Sign a file:
@@ -74,6 +74,12 @@ $ sudo ./target/release/hypatia-ca signature --file example.txt --sign
 ```
 
 Run a local API:
+
+```bash
+$ sudo ./target/release/hypatia-ca serve --addr 127.0.0.1:8080
+```
+
+Development uses `cargo fmt --all`, `cargo clippy`, and `cargo test`.
 
 ```bash
 $ sudo ./target/release/hypatia-ca serve --addr 127.0.0.1:8080

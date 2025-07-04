@@ -15,6 +15,10 @@ pub struct SignCertArgs {
     /// Validity period in days
     #[arg(long, default_value = "365")]
     pub days: u32,
+
+    /// Subject Alternative Names
+    #[arg(long)]
+    pub san: Vec<String>,
 }
 
 impl crate::cmd::Runnable for SignCertArgs {
@@ -23,7 +27,7 @@ impl crate::cmd::Runnable for SignCertArgs {
         let ca_key = KeyPair::from_pem(&ca_key).map_err(Error::from)?;
         let ca = Issuer::from_ca_cert_pem(&ca_cert, ca_key).map_err(Error::from)?;
 
-        let mut params = CertificateParams::new(vec![]).map_err(Error::from)?;
+        let mut params = CertificateParams::new(self.san.clone()).map_err(Error::from)?;
         params.is_ca = IsCa::ExplicitNoCa;
         params
             .distinguished_name
